@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selettore Promozione Ceramica (Multi-Selezione)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#000000', // Nero Puro
+                        'secondary': '#F3F4F6', // Sfondo Grigio Chiaro
+                        'accent': '#4B5563', // Grigio Scuro per testo
+                        'border-light': '#D1D5DB', // Grigio Chiaro per bordi
+                        'error-red': '#EF4444', // Rosso per errori
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Importazione del font Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        /* Stili aggiuntivi per un aspetto pulito e moderno */
+        body {
+            background-color: #F3F4F6; /* Sfondo Grigio Chiaro */
+        }
+        .form-input {
+            transition: all 0.2s;
+            border-color: #D1D5DB; /* Grigio chiaro per i bordi */
+            color: #1F2937; /* Grigio molto scuro per il testo */
+        }
+        .form-input:focus {
+            border-color: #000000; /* Nero in focus */
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+        }
+        /* Stile per i campi con errori di validazione */
+        .input-error {
+            border-color: #EF4444 !important; /* Rosso per errore */
+        }
+        
+        /* === MODIFICHE CHIAVE PER LA GRIGLIA DI SELEZIONE === */
+        .product-card {
+            cursor: pointer;
+            transition: transform 0.2s ease-out, box-shadow 0.2s, border-color 0.2s;
+            border: 2px solid #D1D5DB; /* Bordo leggero di default */
+            height: 250px; /* Altezza fissa aumentata per migliore impatto visivo */
+            padding: 0; /* Rimosso padding per massimizzare lo spazio interno */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; /* Spinge immagine in alto e info in basso */
+            background-color: #FFFFFF;
+            text-align: center;
+            overflow: hidden; /* Garantisce che l'immagine stia dentro il bordo arrotondato */
+            border-radius: 0.75rem; /* Aggiunto qui per coerenza */
+        }
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .product-card.selected {
+            border-color: #000000; /* Bordo primario (nero) quando selezionato */
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1); 
+            background-color: #FAFAFA;
+        }
+
+        /* Contenitore per l'immagine: prende il 70% della card e arrotonda solo sopra */
+        .product-card-image-wrapper {
+            height: 70%; 
+            width: 100%;
+            overflow: hidden;
+            border-radius: 0.75rem 0.75rem 0 0; 
+        }
+
+        /* Immagine: copre interamente il wrapper */
+        .product-card-image-wrapper img {
+            width: 100%; 
+            height: 100%;
+            object-fit: cover; /* Riempie l'area, ritagliando se necessario */
+        }
+
+        /* Contenitore per nome e prezzo: prende il 30% e ha un bordo divisorio */
+        .product-card-info { 
+            height: 30%; 
+            padding: 0.5rem 0.75rem; 
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-top: 1px solid #D1D5DB; 
+            border-radius: 0 0 0.75rem 0.75rem;
+        }
+
+        .product-card-name {
+            font-size: 0.875rem; 
+            font-weight: 600; 
+            margin-top: 0;
+            margin-bottom: 0.25rem;
+            color: #000000;
+        }
+        /* ======================================= */
+        /* Stili per l'header centrato */
+        .header-content {
+            display: flex;
+            flex-direction: column; /* Impila logo e titolo */
+            align-items: center; /* Centra orizzontalmente */
+            text-align: center; /* Centra il testo */
+        }
+        .main-title {
+            margin-top: 0.5rem; /* Spazio tra logo e titolo */
+            line-height: 1.2; 
+        }
+        .logo-img {
+            height: 70px; /* AUMENTATO per maggiore enfasi */
+        }
+    </style>
+</head>
+<body class="font-sans min-h-screen p-4 md:p-8 flex items-center justify-center">
+
+    <div id="app" class="w-full max-w-4xl bg-white shadow-2xl rounded-2xl overflow-hidden">
+        
+        <header class="bg-primary text-white p-6 md:p-8 rounded-t-2xl">
+            <div class="header-content">
+                <img src="logo-adelisco[708].gif" alt="Logo Adelisco" class="logo-img mb-2" />
+                
+                <h1 class="text-3xl md:text-4xl font-extrabold main-title">Scelta gadget pubblicitario</h1>
+            </div>
+        </header>
+
+        <main class="p-6 md:p-10">
+
+            <section class="mb-8 border-b pb-6">
+                <h2 class="text-2xl font-bold text-accent mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 14a6 6 0 110-12 6 6 0 010 12zM9 9a1 1 0 012 0v3a1 1 0 11-2 0V9z"></path></svg>
+                    1. Seleziona Prodotti e Definisci le Quantità (Prezzi IVA Escl.)
+                </h2>
+                
+                <div id="productSelection" class="mb-6">
+                    <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 rounded-xl border-2 border-primary/20 bg-secondary shadow-lg">
+                        </div>
+                </div>
+                
+                <div class="mt-8 pt-4 border-t">
+                    <h3 class="text-xl font-bold text-primary mb-4">Prodotti Selezionati (Min. 30 pezzi per tipo):</h3>
+                    
+                    <div id="selectedProductsList" class="space-y-4">
+                        <p id="noSelectionMessage" class="text-accent italic">Seleziona uno o più prodotti dalla griglia sopra.</p>
+                    </div>
+
+                    <div id="realtimeSubtotal" class="flex justify-between items-center mt-4 p-3 bg-primary/10 rounded-lg hidden">
+                        <span class="font-bold text-md md:text-lg text-primary">Subtotale Complessivo (IVA Escl.):</span>
+                        <span id="grandSubtotalDisplay" class="font-extrabold text-xl text-primary">0,00 €</span>
+                    </div>
+
+                    <p id="totalQuantityError" class="text-red-500 text-sm mt-4 hidden font-medium">Attenzione: Assicurati che ogni prodotto selezionato abbia una quantità di almeno 30 pezzi.</p>
+                </div>
+                
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-bold text-accent mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M4 2h16c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2zm2 4v14h12V6H6zm2 2h2v2H8V8zm4 0h2v2h-2V8zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z" clip-rule="evenodd"/>
+                    </svg>
+                    2. Informazioni Aziendali
+                </h2>
+                <form id="requestForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="companyName" class="block text-sm font-medium text-accent mb-1">Nome Azienda / Ragione Sociale <span class="text-red-500">*</span></label>
+                        <input type="text" id="companyName" name="companyName" required placeholder="Es: Ceramica Italia S.r.l." class="form-input w-full p-3 border rounded-lg focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="vatNumber" class="block text-sm font-medium text-accent mb-1">Partita IVA <span class="text-red-500">*</span></label>
+                        <input 
+                            type="text" 
+                            id="vatNumber" 
+                            name="vatNumber" 
+                            required 
+                            placeholder="ITxxxxxxxxxxx" 
+                            class="form-input w-full p-3 border rounded-lg focus:outline-none"
+                            oninput="validateVatNumber()" 
+                            maxlength="16" 
+                            pattern="^[A-Z]{2}\s?[A-Z0-9]{2,14}$"
+                            title="Inserisci un codice IVA valido (es. IT12345678901 o DE123456789)"
+                        >
+                         <p id="vatNumberError" class="text-error-red text-xs mt-1 hidden">La Partita IVA non deve superare i 16 caratteri e deve essere valida.</p>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-accent mb-1">Email Aziendale <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" name="email" required placeholder="contatti@azienda.it" class="form-input w-full p-3 border rounded-lg focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="sdiCode" class="block text-sm font-medium text-accent mb-1">Codice SDI (7 Caratteri) <span class="text-red-500">*</span></label>
+                        <input 
+                            type="text" 
+                            id="sdiCode" 
+                            name="sdiCode" 
+                            required 
+                            placeholder="Es: XXXXXXX" 
+                            maxlength="7"
+                            pattern="^[A-Za-z0-9]{7}$"
+                            class="form-input w-full p-3 border rounded-lg focus:outline-none"
+                            title="Inserisci un Codice SDI valido di 7 caratteri (solo lettere e numeri)."
+                        >
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="billingAddress" class="block text-sm font-medium text-accent mb-1">Indirizzo di Fatturazione Completo (Via, Città, CAP) <span class="text-red-500">*</span></label>
+                        <input type="text" id="billingAddress" name="billingAddress" required placeholder="Es: Via Roma 1, 00100 Roma" class="form-input w-full p-3 border rounded-lg focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label for="phoneNumber" class="block text-sm font-medium text-accent mb-1">Numero di Telefono</label>
+                        <div class="flex space-x-2">
+                            <select 
+                                id="phonePrefix" 
+                                name="phonePrefix" 
+                                class="form-input p-3 border rounded-lg focus:outline-none w-1/3"
+                                onchange="validatePhoneNumber()"
+                            >
+                                <option value="+39" data-min-length="8" data-max-length="12" selected>🇮🇹 (+39)</option>
+                                <option value="+49" data-min-length="8" data-max-length="14">🇩🇪 (+49)</option>
+                                <option value="+33" data-min-length="9" data-max-length="9">🇫🇷 (+33)</option>
+                                <option value="+34" data-min-length="9" data-max-length="9">🇪🇸 (+34)</option>
+                                <option value="+41" data-min-length="9" data-max-length="12">🇨🇭 (+41)</option>
+                                <option value="other">Altro...</option>
+                            </select>
+                            <input 
+                                type="tel" 
+                                id="phoneNumber" 
+                                name="phoneNumber" 
+                                placeholder="0123 456789" 
+                                class="form-input w-2/3 p-3 border rounded-lg focus:outline-none"
+                                oninput="validatePhoneNumber()"
+                                maxlength="14"
+                            >
+                        </div>
+                        <p id="phoneNumberError" class="text-error-red text-xs mt-1 hidden">Inserisci un numero di telefono valido per il prefisso selezionato (es. Italia: 8-12 cifre).</p>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label for="logoFile" class="block text-sm font-medium text-accent mb-1">Carica il Logo per la Personalizzazione (Opzionale)</label>
+                        <input type="file" id="logoFile" name="logoFile" accept=".png, .jpg, .jpeg, .svg, .pdf, .gif, .ai, .eps" class="form-input w-full p-3 border rounded-lg focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-accent cursor-pointer">
+                        <p id="logoFileName" class="text-xs text-accent mt-1 italic">Nessun file selezionato.</p>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="notes" class="block text-sm font-medium text-accent mb-1">Note Aggiuntive sulla Personalizzazione (Colore smalto, Posizione logo, ecc.)</label>
+                        <textarea id="notes" name="notes" rows="3" placeholder="Descrivi il tipo di personalizzazione e le tue esigenze specifiche." class="form-input w-full p-3 border rounded-lg focus:outline-none"></textarea>
+                    </div>
+                    
+                    <div class="md:col-span-2 text-center mt-6">
+                        <button type="submit" id="submitBtn" disabled class="bg-primary hover:bg-accent text-white font-bold py-3 px-8 rounded-xl transition duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-primary/50 disabled:opacity-50">
+                            Invia Ordine Promozionale
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            
+            <div id="outputArea" class="mt-8 pt-6 border-t border-border-light hidden">
+                </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Array dei prodotti con i prezzi (IVA esclusa)
+        const products = [
+            { id: 'barchette', name: 'Barchetta', description: 'Ideale per omaggi gastronomici o piattini d\'antipasto.', image: 'barchetta_pic1.jpg', price: 9.00 }, 
+            { id: 'porta_cellulare', name: 'Porta Telefono', description: 'Supporto da scrivania personalizzabile con il tuo logo.', image: 'portatelefono_pic2.jpg', price: 9.00 }, 
+            { id: 'porta_candela_coperchio', name: 'Porta Candela con Coperchio', description: 'Contenitore elegante per candele o decorazioni.', image: 'candelaconcoperchio_pic.jpg', price: 11.99 },
+            { id: 'porta_candela', name: 'Porta Candela Semplice', description: 'Versione minimalista per tealight o piccole candele.', image: 'candela_pic.jpg', price: 9.99 },
+            { id: 'porta_documenti', name: 'Porta Documenti', description: 'Soluzione verticale per cataloghi o documenti. Utile per il branding aziendale.', image: 'portadocumenti_pic.jpg', price: 9.99 }, 
+            { id: 'porta_penne', name: 'Portapenne', description: 'Design cilindrico per penne e matite, personalizzabile per il brand.', image: 'portapenne_pic.jpg', price: 9.00 }, 
+        ];
+        
+        const MIN_QUANTITY = 30; 
+        let selectedProductsMap = new Map();
+        let requestForm, productGrid, submitBtn, outputArea, logoFileInput, logoFileNameDisplay;
+        let selectedProductsList, noSelectionMessage, totalQuantityError, realtimeSubtotal, grandSubtotalDisplay;
+        let vatNumberInput, vatNumberError, phonePrefixSelect, phoneNumberInput, phoneNumberError;
+        let sdiCodeInput, billingAddressInput;
+
+        // La funzione initAutocomplete è stata rimossa, in quanto non necessaria.
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount);
+        }
+
+        function renderProductGrid() {
+            if (!productGrid) return; 
+            productGrid.innerHTML = ''; 
+            
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.id = `card-${product.id}`;
+                const isSelected = selectedProductsMap.has(product.id);
+                card.className = `product-card rounded-xl shadow-md ${isSelected ? 'selected' : ''}`;
+                card.setAttribute('data-product-id', product.id);
+                
+                card.innerHTML = `
+                    <div class="product-card-image-wrapper">
+                        <img src="${product.image}" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/300x200/000000/FFFFFF?text=IMMAGINE+NON+TROVATA'" loading="lazy">
+                    </div>
+                    <div class="product-card-info">
+                        <span class="product-card-name">${product.name}</span>
+                        <span class="text-xs text-accent font-bold">${formatCurrency(product.price)} + IVA (pz.)</span>
+                    </div>
+                `;
+                card.addEventListener('click', () => selectProduct(product.id));
+                productGrid.appendChild(card);
+            });
+        }
+
+        function selectProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            if (selectedProductsMap.has(productId)) {
+                selectedProductsMap.delete(productId);
+            } else {
+                selectedProductsMap.set(productId, { ...product, quantity: MIN_QUANTITY, price: product.price }); 
+            }
+            renderProductGrid();
+            renderSelectedProducts();
+            updateGrandSubtotal(); 
+            checkFormValidity();
+        }
+
+        function updateGrandSubtotal() {
+            let currentGrandTotalExclIVA = 0;
+            selectedProductsMap.forEach(product => {
+                const quantity = product.quantity && !isNaN(product.quantity) ? product.quantity : 0;
+                currentGrandTotalExclIVA += quantity * product.price;
+            });
+
+            if (selectedProductsMap.size > 0 && grandSubtotalDisplay) {
+                grandSubtotalDisplay.textContent = formatCurrency(currentGrandTotalExclIVA);
+                realtimeSubtotal.classList.remove('hidden');
+            } else if (realtimeSubtotal) {
+                realtimeSubtotal.classList.add('hidden');
+            }
+        }
+
+        function renderSelectedProducts() {
+            if (!selectedProductsList) return;
+            selectedProductsList.innerHTML = ''; 
+
+            if (selectedProductsMap.size === 0) {
+                noSelectionMessage.classList.remove('hidden');
+                updateGrandSubtotal(); 
+                checkFormValidity();
+                return;
+            }
+
+            noSelectionMessage.classList.add('hidden');
+
+            selectedProductsMap.forEach(product => {
+                const subtotal = (product.quantity && !isNaN(product.quantity) ? product.quantity : 0) * product.price;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-border-light';
+                itemDiv.id = `selected-item-${product.id}`;
+                
+                itemDiv.innerHTML = `
+                    <div class="flex-grow mb-2 md:mb-0">
+                        <span class="font-bold text-primary">${product.name}</span>
+                        <p class="text-xs text-accent italic">${product.description}</p>
+                        <p class="text-sm font-medium mt-1">Prezzo unitario (IVA Escl.): <span class="text-primary font-bold">${formatCurrency(product.price)}</span></p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-24">
+                            <label for="qty-${product.id}" class="block text-xs font-medium text-accent">Pezzi (Min. ${MIN_QUANTITY})</label>
+                            <input type="number" id="qty-${product.id}" name="qty-${product.id}" min="${MIN_QUANTITY}" value="${product.quantity}" class="form-input w-full p-2 border rounded-lg text-sm text-center" oninput="updateQuantity('${product.id}', this.value)">
+                        </div>
+                        <div class="w-28 text-right hidden sm:block">
+                            <span class="block text-xs font-medium text-accent">Subtotale (IVA Escl.)</span>
+                            <span id="subtotal-${product.id}" class="block font-bold text-lg text-green-700">${formatCurrency(subtotal)}</span>
+                        </div>
+                        <button class="text-red-500 hover:text-red-700 p-2 rounded-full transition-colors" onclick="selectProduct('${product.id}')" title="Rimuovi prodotto">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </div>
+                `;
+                selectedProductsList.appendChild(itemDiv);
+            });
+        }
+
+        function updateQuantity(productId, newQuantity) {
+            const quantity = parseInt(newQuantity);
+            if (selectedProductsMap.has(productId)) {
+                const product = selectedProductsMap.get(productId);
+                product.quantity = isNaN(quantity) ? 0 : quantity; 
+                const subtotalElement = document.getElementById(`subtotal-${productId}`);
+                if (subtotalElement) {
+                    const newSubtotal = product.quantity * product.price;
+                    subtotalElement.textContent = formatCurrency(newSubtotal);
+                }
+            }
+            validateAllQuantities();
+            updateGrandSubtotal(); 
+            checkFormValidity();
+        }
+
+        function validateAllQuantities() {
+            let allValid = true;
+            if (selectedProductsMap.size === 0) {
+                allValid = false; 
+            } else {
+                selectedProductsMap.forEach(product => {
+                    const quantityInput = document.getElementById(`qty-${product.id}`);
+                    if (isNaN(product.quantity) || product.quantity < MIN_QUANTITY || product.quantity <= 0) {
+                        allValid = false;
+                        if(quantityInput) quantityInput.classList.add('border-red-500');
+                    } else {
+                        if(quantityInput) quantityInput.classList.remove('border-red-500');
+                    }
+                });
+            }
+            totalQuantityError.classList.toggle('hidden', allValid);
+            return allValid;
+        }
+
+        /**
+         * ✅ MODIFICA: Converte la P.IVA in maiuscolo e poi valida.
+         */
+        function validateVatNumber() {
+            // Forza la conversione del valore a maiuscolo direttamente nel campo
+            vatNumberInput.value = vatNumberInput.value.toUpperCase();
+            
+            const vatValue = vatNumberInput.value.trim();
+            
+            if (vatValue.length === 0) {
+                vatNumberInput.classList.remove('input-error');
+                vatNumberError.classList.add('hidden');
+                return false; 
+            }
+            
+            const isValid = vatNumberInput.checkValidity() && vatValue.length <= 16;
+            
+            if (!isValid) {
+                vatNumberInput.classList.add('input-error');
+                vatNumberError.classList.remove('hidden');
+                if (vatValue.length > 16) {
+                    vatNumberError.textContent = "La Partita IVA non deve superare i 16 caratteri.";
+                } else { 
+                    vatNumberError.textContent = "Formato Partita IVA non valido (es. IT12345678901).";
+                }
+            } else {
+                vatNumberInput.classList.remove('input-error');
+                vatNumberError.classList.add('hidden');
+            }
+            return isValid;
+        }
+
+        function validatePhoneNumber() {
+            const numberValue = phoneNumberInput.value.replace(/\s+/g, '');
+            if (numberValue.length === 0) {
+                phoneNumberInput.classList.remove('input-error');
+                phoneNumberError.classList.add('hidden');
+                return true; 
+            }
+            
+            const selectedOption = phonePrefixSelect.options[phonePrefixSelect.selectedIndex];
+            const minLength = parseInt(selectedOption.getAttribute('data-min-length')) || 8;
+            const maxLength = parseInt(selectedOption.getAttribute('data-max-length')) || 14; 
+            const isLengthValid = numberValue.length >= minLength && numberValue.length <= maxLength;
+            
+            if (!isLengthValid) {
+                phoneNumberInput.classList.add('input-error');
+                phoneNumberError.classList.remove('hidden');
+                phoneNumberError.textContent = `Il numero deve contenere tra ${minLength} e ${maxLength} cifre (prefisso escluso).`;
+            } else {
+                phoneNumberInput.classList.remove('input-error');
+                phoneNumberError.classList.add('hidden');
+            }
+            phoneNumberInput.maxLength = maxLength + 2; 
+            return isLengthValid;
+        }
+
+        function checkFormValidity() {
+            const isFormFieldsValid = requestForm.checkValidity();
+            const isProductSelectionValid = validateAllQuantities();
+            const isVatValid = validateVatNumber();
+            const isPhoneValid = validatePhoneNumber(); 
+            const isOverallValid = isFormFieldsValid && isProductSelectionValid && isVatValid && isPhoneValid;
+            if (submitBtn) {
+                submitBtn.disabled = !isOverallValid;
+            }
+            return isOverallValid; 
+        }
+
+        function updateLogoFileName() {
+            const file = logoFileInput.files[0];
+            logoFileNameDisplay.textContent = file ? file.name : 'Nessun file selezionato.';
+            checkFormValidity();
+        }
+
+        async function sendQuoteRequest(event) {
+            event.preventDefault();
+            const isOverallValid = checkFormValidity();
+            if (!isOverallValid) {
+                outputArea.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-800 rounded-lg">Compila correttamente tutti i campi obbligatori e correggi gli errori di validazione.</div>`;
+                outputArea.classList.remove('hidden');
+                const firstInvalidField = requestForm.querySelector(':invalid');
+                if (firstInvalidField) {
+                    firstInvalidField.focus();
+                }
+                return;
+            }
+
+            outputArea.innerHTML = '';
+            outputArea.classList.remove('hidden');
+            
+            const form = event.target;
+            const formData = new FormData(form);
+
+            for(let key of formData.keys()) {
+                if(key.startsWith('qty-')) {
+                    formData.delete(key);
+                }
+            }
+            
+            const productsArray = [];
+            selectedProductsMap.forEach(product => {
+                const quantityInput = document.getElementById(`qty-${product.id}`);
+                const quantity = quantityInput ? parseInt(quantityInput.value) : product.quantity;
+                const price = parseFloat(product.price);
+                const subtotal = (quantity * price);
+                productsArray.push({
+                    name: product.name,
+                    quantity: quantity,
+                    price: formatCurrency(price),
+                    totalPrice: formatCurrency(subtotal)
+                });
+            });
+            formData.append('products', JSON.stringify(productsArray));
+            
+            const grandSubtotal = document.getElementById('grandSubtotalDisplay').textContent;
+            formData.append('subtotal', grandSubtotal);
+
+            if (phoneNumberInput.value.trim()) {
+                const fullPhoneNumber = `${phonePrefixSelect.value} ${phoneNumberInput.value.trim()}`;
+                formData.set('phone', fullPhoneNumber);
+            } else {
+                 formData.delete('phone');
+            }
+            
+            submitBtn.disabled = true;
+            outputArea.innerHTML = `<div class="p-4 bg-blue-100 text-blue-800 rounded-lg">Invio in corso... Attendere.</div>`;
+
+            try {
+                const response = await fetch('/api/send-quote', { 
+                    method: 'POST',
+                    body: formData 
+                });
+                const result = await response.json();
+                if (result.success) {
+                    outputArea.innerHTML = `<div class="p-4 bg-green-100 text-green-800 rounded-lg">✅ Ordine inviato con successo! Verrai ricontattato al più presto.</div>`;
+                    form.reset(); 
+                    selectedProductsMap.clear(); 
+                    renderProductGrid();
+                    renderSelectedProducts();
+                    logoFileNameDisplay.textContent = 'Nessun file selezionato.';
+                    checkFormValidity();
+                } else {
+                    outputArea.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded-lg">❌ Errore nell'invio della richiesta: ${result.message || 'Errore sconosciuto.'}</div>`;
+                }
+            } catch (error) {
+                console.error('Errore durante il fetch:', error);
+                outputArea.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded-lg">❌ Errore di comunicazione con il server. Riprova più tardi.</div>`;
+            } finally {
+                 if (!submitBtn.disabled || outputArea.innerHTML.includes('Errore')) {
+                    submitBtn.disabled = false;
+                 }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            productGrid = document.getElementById('productGrid');
+            selectedProductsList = document.getElementById('selectedProductsList');
+            noSelectionMessage = document.getElementById('noSelectionMessage');
+            totalQuantityError = document.getElementById('totalQuantityError');
+            realtimeSubtotal = document.getElementById('realtimeSubtotal');
+            grandSubtotalDisplay = document.getElementById('grandSubtotalDisplay');
+            requestForm = document.getElementById('requestForm');
+            submitBtn = document.getElementById('submitBtn');
+            outputArea = document.getElementById('outputArea');
+            logoFileInput = document.getElementById('logoFile');
+            logoFileNameDisplay = document.getElementById('logoFileName');
+            vatNumberInput = document.getElementById('vatNumber');
+            vatNumberError = document.getElementById('vatNumberError');
+            phonePrefixSelect = document.getElementById('phonePrefix');
+            phoneNumberInput = document.getElementById('phoneNumber');
+            phoneNumberError = document.getElementById('phoneNumberError');
+            sdiCodeInput = document.getElementById('sdiCode');
+            billingAddressInput = document.getElementById('billingAddress');
+
+            if (logoFileInput) logoFileInput.addEventListener('change', updateLogoFileName);
+            if (requestForm) {
+                requestForm.addEventListener('input', checkFormValidity);
+                requestForm.addEventListener('submit', sendQuoteRequest);
+                if(vatNumberInput) {
+                    vatNumberInput.addEventListener('input', validateVatNumber);
+                    vatNumberInput.addEventListener('blur', () => {
+                        if (vatNumberInput.value.trim() === '' && vatNumberInput.required) {
+                            vatNumberInput.classList.add('input-error');
+                            vatNumberError.textContent = "Campo obbligatorio.";
+                            vatNumberError.classList.remove('hidden');
+                        }
+                    });
+                }
+            }
+            renderProductGrid();
+            renderSelectedProducts();
+            checkFormValidity(); 
+        });
+    </script>
+</body>
+</html>
