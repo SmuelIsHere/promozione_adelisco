@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selettore Promozione Ceramica (Multi-Selezione)</title>
+    <title>Promozione Adelisco</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script>
@@ -51,46 +51,54 @@
             cursor: pointer;
             transition: transform 0.2s ease-out, box-shadow 0.2s, border-color 0.2s;
             border: 2px solid #D1D5DB; /* Bordo leggero di default */
-            height: 250px; /* Altezza fissa aumentata per migliore impatto visivo */
-            padding: 0; /* Rimosso padding per massimizzare lo spazio interno */
+            /* ✅ MODIFICA CHIAVE: Altezza rimossa per rendere la card flessibile */
+            /* height: 280px; <--- RIMOSSO */ 
+            padding: 0; 
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between; /* Spinge immagine in alto e info in basso */
+            justify-content: flex-start; /* Allineato in alto per evitare spazi vuoti */
             background-color: #FFFFFF;
             text-align: center;
-            overflow: hidden; /* Garantisce che l'immagine stia dentro il bordo arrotondato */
-            border-radius: 0.75rem; /* Aggiunto qui per coerenza */
+            overflow: hidden; 
+            border-radius: 0.75rem; 
+            /* ✅ NUOVO: Fissa un aspect-ratio per mantenere la proporzione su mobile */
+            aspect-ratio: 4/5; /* Esempio: 4 di larghezza per 5 di altezza */
         }
+
         .product-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
         .product-card.selected {
-            border-color: #000000; /* Bordo primario (nero) quando selezionato */
+            border-color: #000000; 
             box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1); 
             background-color: #FAFAFA;
         }
 
-        /* Contenitore per l'immagine: prende il 70% della card e arrotonda solo sopra */
+        /* Contenitore per l'immagine: prende circa l'80% dell'altezza disponibile */
         .product-card-image-wrapper {
+            /* ✅ MODIFICA: Aumentata al 70% per dare più spazio all'immagine */
             height: 70%; 
             width: 100%;
             overflow: hidden;
             border-radius: 0.75rem 0.75rem 0 0; 
+            /* ✅ NUOVO: Aggiunto un min-height per garantire spazio anche senza aspect-ratio */
+            min-height: 120px; 
         }
 
         /* Immagine: copre interamente il wrapper */
         .product-card-image-wrapper img {
             width: 100%; 
             height: 100%;
-            object-fit: cover; /* Riempie l'area, ritagliando se necessario */
+            object-fit: cover; 
         }
 
-        /* Contenitore per nome e prezzo: prende il 30% e ha un bordo divisorio */
+        /* Contenitore per nome e prezzo: prende il 30% restante */
         .product-card-info { 
+            /* ✅ MODIFICA: Ridotta al 30% per lasciare spazio all'immagine */
             height: 30%; 
-            padding: 0.5rem 0.75rem; 
+            padding: 0.5rem; /* Ridotto leggermente il padding per far stare il testo */
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -101,26 +109,34 @@
         }
 
         .product-card-name {
-            font-size: 0.875rem; 
+            font-size: 0.8rem; /* Rimpicciolito il font del nome su mobile per evitare overflow */
             font-weight: 600; 
             margin-top: 0;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.3rem; /* Spazio ridotto */
             color: #000000;
+            line-height: 1.2;
+        }
+        /* Ritorna il font più grande su desktop */
+        @media (min-width: 768px) {
+            .product-card-name {
+                font-size: 0.875rem; 
+                margin-bottom: 0.5rem;
+            }
         }
         /* ======================================= */
         /* Stili per l'header centrato */
         .header-content {
             display: flex;
-            flex-direction: column; /* Impila logo e titolo */
-            align-items: center; /* Centra orizzontalmente */
-            text-align: center; /* Centra il testo */
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
         }
         .main-title {
-            margin-top: 0.5rem; /* Spazio tra logo e titolo */
+            margin-top: 0.5rem; 
             line-height: 1.2; 
         }
         .logo-img {
-            height: 70px; /* AUMENTATO per maggiore enfasi */
+            height: 70px; 
         }
     </style>
 </head>
@@ -560,6 +576,7 @@
             outputArea.innerHTML = `<div class="p-4 bg-blue-100 text-blue-800 rounded-lg">Invio in corso... Attendere.</div>`;
 
             try {
+                // ✅ MODIFICA URL: Uso dell'URL relativo per il deploy su Render
                 const response = await fetch('/api/send-quote', { 
                     method: 'POST',
                     body: formData 
