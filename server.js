@@ -5,15 +5,12 @@ const fs = require('fs'); // Libreria nativa di Node per gestire il file system
 const path = require('path'); // Importazione del modulo 'path'
 
 const app = express();
-// ✅ MODIFICA: Render imposta la variabile d'ambiente PORT (tipicamente 10000)
+// Render imposta la variabile d'ambiente PORT (tipicamente 10000)
 const port = process.env.PORT || 3000; 
 
-// ✅ MODIFICA: La cartella 'public' non è necessaria nel tuo caso
-// Serviamo i file direttamente dalla radice del progetto.
-// app.use(express.static('public')); // RIMOSSO o Modificato se i file sono nella root
-
-// ✅ AGGIUNTO: Serviamo i file statici, incluso index.html, dalla cartella radice del progetto
-// Assumendo che index.html sia nella stessa cartella di server.js
+// ✅ CONFIGURAZIONE CRUCIALE PER RENDER: 
+// Serve TUTTI i file statici (index.html, immagini, CSS, JS) dalla cartella radice.
+// Express serve automaticamente index.html per la rotta '/'.
 app.use(express.static(path.join(__dirname))); 
 
 // Configurazione di Nodemailer (USANDO LE CREDENZIALI GMAIL CORRETTE)
@@ -33,7 +30,7 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // Esempio: 10 MB
  });
 
-// Permette le chiamate cross-origin (CORS) - Mantenuto, ma Render non lo necessita per la tua app.
+// Permette le chiamate cross-origin (CORS) 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET,POST');
@@ -41,11 +38,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ AGGIUNTO: Rotta esplicita per la radice del sito.
-// Questo è il passaggio CRUCIALE che dice a Render che l'app è "viva" e dove trovare la homepage.
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+// ❌ RIMOSSO: La rotta esplicita app.get('/') è stata rimossa perché ridondante 
+// e può entrare in conflitto con app.use(express.static) che serve già index.html.
 
 // ROTTA API per la richiesta di preventivo
 app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
