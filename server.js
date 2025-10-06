@@ -2,11 +2,19 @@ const express = require('express');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
 const fs = require('fs'); // Libreria nativa di Node per gestire il file system
+const path = require('path'); // Importazione del modulo 'path'
 
 const app = express();
-const port = 3000;
+// ✅ MODIFICA: Render imposta la variabile d'ambiente PORT (tipicamente 10000)
+const port = process.env.PORT || 3000; 
 
-app.use(express.static('public')); // Per servire file statici (HTML, CSS, JS)
+// ✅ MODIFICA: La cartella 'public' non è necessaria nel tuo caso
+// Serviamo i file direttamente dalla radice del progetto.
+// app.use(express.static('public')); // RIMOSSO o Modificato se i file sono nella root
+
+// ✅ AGGIUNTO: Serviamo i file statici, incluso index.html, dalla cartella radice del progetto
+// Assumendo che index.html sia nella stessa cartella di server.js
+app.use(express.static(path.join(__dirname))); 
 
 // Configurazione di Nodemailer (USANDO LE CREDENZIALI GMAIL CORRETTE)
 const transporter = nodemailer.createTransport({
@@ -25,12 +33,18 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // Esempio: 10 MB
  });
 
-// Permette le chiamate cross-origin (CORS)
+// Permette le chiamate cross-origin (CORS) - Mantenuto, ma Render non lo necessita per la tua app.
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET,POST');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
+});
+
+// ✅ AGGIUNTO: Rotta esplicita per la radice del sito.
+// Questo è il passaggio CRUCIALE che dice a Render che l'app è "viva" e dove trovare la homepage.
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ROTTA API per la richiesta di preventivo
@@ -71,25 +85,24 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
     }
 
     // ✅ MODIFICA: Generazione della tabella HTML per i prodotti con stili in linea più semplici e robusti (compatibilità email)
-    // Utilizzato border="1" sul tavolo e bordi espliciti su ogni cella (td) per massima compatibilità (es. Outlook)
     const productsHtml = selectedProducts.length > 0
         ? `
-        <table width="100%" border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 15px; font-size: 14px; border: 1px solid #D1D5DB;">
+        <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 15px; font-size: 14px;">
             <thead>
-                <tr style="background-color: #000000; color: #FFFFFF;">
-                    <th width="35%" style="padding: 10px; text-align: left; font-weight: bold; border-right: 1px solid #374151; border-bottom: 2px solid #D1D5DB;">Prodotto</th>
-                    <th width="20%" style="padding: 10px; text-align: center; font-weight: bold; border-right: 1px solid #374151; border-bottom: 2px solid #D1D5DB;">Quantità</th>
-                    <th width="25%" style="padding: 10px; text-align: right; font-weight: bold; border-right: 1px solid #374151; border-bottom: 2px solid #D1D5DB;">Prezzo Unitario</th>
-                    <th width="20%" style="padding: 10px; text-align: right; font-weight: bold; border-bottom: 2px solid #D1D5DB;">Subtotale</th>
+                <tr style="background-color: #F9FAFB;">
+                    <th width="35%" style="padding: 10px; text-align: left; color: #111827; font-weight: bold; border-bottom: 2px solid #D1D5DB;">Prodotto</th>
+                    <th width="20%" style="padding: 10px; text-align: center; color: #111827; font-weight: bold; border-bottom: 2px solid #D1D5DB;">Quantità</th>
+                    <th width="25%" style="padding: 10px; text-align: right; color: #111827; font-weight: bold; border-bottom: 2px solid #D1D5DB;">Prezzo Unitario</th>
+                    <th width="20%" style="padding: 10px; text-align: right; color: #111827; font-weight: bold; border-bottom: 2px solid #D1D5DB;">Subtotale</th>
                 </tr>
             </thead>
             <tbody>
                 ${selectedProducts.map(p => `
-                    <tr>
-                        <td style="padding: 10px; text-align: left; color: #374151; vertical-align: top; border-right: 1px solid #D1D5DB; border-bottom: 1px solid #D1D5DB;">${p.name}</td>
-                        <td style="padding: 10px; text-align: center; color: #374151; vertical-align: top; border-right: 1px solid #D1D5DB; border-bottom: 1px solid #D1D5DB;">${p.quantity} pezzi</td>
-                        <td style="padding: 10px; text-align: right; color: #374151; vertical-align: top; border-right: 1px solid #D1D5DB; border-bottom: 1px solid #D1D5DB;">${p.price}</td>
-                        <td style="padding: 10px; text-align: right; color: #000000; font-weight: bold; vertical-align: top; border-bottom: 1px solid #D1D5DB;">${p.totalPrice}</td>
+                    <tr style="border-bottom: 1px solid #EEEEEE;">
+                        <td style="padding: 10px; text-align: left; color: #374151; vertical-align: top;">${p.name}</td>
+                        <td style="padding: 10px; text-align: center; color: #374151; vertical-align: top;">${p.quantity} pezzi</td>
+                        <td style="padding: 10px; text-align: right; color: #374151; vertical-align: top;">${p.price}</td>
+                        <td style="padding: 10px; text-align: right; color: #000000; font-weight: bold; vertical-align: top;">${p.totalPrice}</td>
                     </tr>
                 `).join('')}
             </tbody>
@@ -158,7 +171,7 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
 
     } catch (error) {
         console.error('Errore durante l\'invio dell\'email:', error);
-        // Messaggio di errore aggiornato a "Ordine Promozionale"
+        // Ho cambiato il messaggio di errore finale qui, per coerenza
         res.status(500).json({ success: false, message: 'Errore durante l\'invio dell\'ordine promozionale.', details: error.message });
     } finally {
         // 6. CRUCIALE: Cancella il file temporaneo dopo l'invio
@@ -172,5 +185,5 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
 
 // Avvia il server
 app.listen(port, () => {
-    console.log(`Server avviato su http://localhost:${port}`);
+    console.log(`Server avviato su porta ${port}`);
 });
