@@ -5,13 +5,12 @@ const fs = require('fs');
 const path = require('path'); // Importazione del modulo 'path'
 
 const app = express();
-// Render imposta la variabile d'ambiente PORT 
+// ✅ 1. CRITICO PER RENDER: Usa la porta impostata dall'ambiente (tipicamente 10000)
 const port = process.env.PORT || 3000; 
 
-// 1. CONFIGURAZIONE STATICA: 
-// Serve file da qualsiasi cartella denominata 'public' all'interno della directory di root.
+// 2. CONFIGURAZIONE STATICA: 
+// Serve tutti i file CSS, JS, immagini, ecc., dalla cartella 'public'.
 app.use(express.static(path.join(__dirname, 'public'))); 
-// Nota: path.join(__dirname, 'public') è più robusto di 'public' da solo.
 
 
 // Configurazione di Nodemailer 
@@ -39,11 +38,12 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ FIX CRUCIALE PER 'CANNOT GET /': Rotta esplicita per la radice del sito.
-// Manda ESPLICITAMENTE il file index.html dalla cartella 'public'.
+// ✅ 3. FIX CRUCIALE PER LA HOMEPAGE: Rotta esplicita per la radice del sito.
+// Questo previene l'errore 'cannot GET /' e soddisfa l'health check di Render.
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 
 // ROTTA API per la richiesta di preventivo
 app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
