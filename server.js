@@ -1,33 +1,34 @@
 const express = require('express');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
-const fs = require('fs'); // Libreria nativa di Node per gestire il file system
+const fs = require('fs'); 
 const path = require('path'); // Importazione del modulo 'path'
 
 const app = express();
-// Render imposta la variabile d'ambiente PORT (tipicamente 10000)
+// Render imposta la variabile d'ambiente PORT 
 const port = process.env.PORT || 3000; 
 
-// ✅ CONFIGURAZIONE CRUCIALE PER RENDER: 
-// Serve TUTTI i file statici (index.html, immagini, CSS, JS) dalla cartella radice.
-// Express serve automaticamente index.html per la rotta '/'.
-app.use(express.static(path.join(__dirname))); 
+// 1. CONFIGURAZIONE STATICA: 
+// Serve file da qualsiasi cartella denominata 'public' all'interno della directory di root.
+app.use(express.static(path.join(__dirname, 'public'))); 
+// Nota: path.join(__dirname, 'public') è più robusto di 'public' da solo.
 
-// Configurazione di Nodemailer (USANDO LE CREDENZIALI GMAIL CORRETTE)
+
+// Configurazione di Nodemailer 
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com", 
     port: 465,
-    secure: true, // true per 465
+    secure: true, 
     auth: {
         user: "adeliscosrls@gmail.com", 
-        pass: "cbymgloitbkltufu" // ⚠️ Assicurati che sia la Password Applicazione
+        pass: "cbymgloitbkltufu" // ⚠️ Password Applicazione
     }
 });
 
 // Configurazione di Multer
 const upload = multer({ 
     dest: 'uploads/',
-    limits: { fileSize: 10 * 1024 * 1024 } // Esempio: 10 MB
+    limits: { fileSize: 10 * 1024 * 1024 } 
  });
 
 // Permette le chiamate cross-origin (CORS) 
@@ -38,8 +39,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// ❌ RIMOSSO: La rotta esplicita app.get('/') è stata rimossa perché ridondante 
-// e può entrare in conflitto con app.use(express.static) che serve già index.html.
+// ✅ FIX CRUCIALE PER 'CANNOT GET /': Rotta esplicita per la radice del sito.
+// Manda ESPLICITAMENTE il file index.html dalla cartella 'public'.
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // ROTTA API per la richiesta di preventivo
 app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
@@ -165,7 +169,6 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
 
     } catch (error) {
         console.error('Errore durante l\'invio dell\'email:', error);
-        // Ho cambiato il messaggio di errore finale qui, per coerenza
         res.status(500).json({ success: false, message: 'Errore durante l\'invio dell\'ordine promozionale.', details: error.message });
     } finally {
         // 6. CRUCIALE: Cancella il file temporaneo dopo l'invio
