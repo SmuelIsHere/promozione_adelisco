@@ -51,8 +51,6 @@
             cursor: pointer;
             transition: transform 0.2s ease-out, box-shadow 0.2s, border-color 0.2s;
             border: 2px solid #D1D5DB; /* Bordo leggero di default */
-            /* ✅ MODIFICA CHIAVE: Altezza rimossa per rendere la card flessibile */
-            /* height: 280px; <--- RIMOSSO */ 
             padding: 0; 
             display: flex;
             flex-direction: column;
@@ -62,8 +60,8 @@
             text-align: center;
             overflow: hidden; 
             border-radius: 0.75rem; 
-            /* ✅ NUOVO: Fissa un aspect-ratio per mantenere la proporzione su mobile */
-            aspect-ratio: 4/5; /* Esempio: 4 di larghezza per 5 di altezza */
+            aspect-ratio: 4/5; 
+            position: relative; 
         }
 
         .product-card:hover {
@@ -76,29 +74,23 @@
             background-color: #FAFAFA;
         }
 
-        /* Contenitore per l'immagine: prende circa l'80% dell'altezza disponibile */
         .product-card-image-wrapper {
-            /* ✅ MODIFICA: Aumentata al 70% per dare più spazio all'immagine */
             height: 70%; 
             width: 100%;
             overflow: hidden;
             border-radius: 0.75rem 0.75rem 0 0; 
-            /* ✅ NUOVO: Aggiunto un min-height per garantire spazio anche senza aspect-ratio */
             min-height: 120px; 
         }
 
-        /* Immagine: copre interamente il wrapper */
         .product-card-image-wrapper img {
             width: 100%; 
             height: 100%;
             object-fit: cover; 
         }
 
-        /* Contenitore per nome e prezzo: prende il 30% restante */
         .product-card-info { 
-            /* ✅ MODIFICA: Ridotta al 30% per lasciare spazio all'immagine */
             height: 30%; 
-            padding: 0.5rem; /* Ridotto leggermente il padding per far stare il testo */
+            padding: 0.5rem; 
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -109,19 +101,36 @@
         }
 
         .product-card-name {
-            font-size: 0.8rem; /* Rimpicciolito il font del nome su mobile per evitare overflow */
+            font-size: 0.8rem; 
             font-weight: 600; 
             margin-top: 0;
-            margin-bottom: 0.3rem; /* Spazio ridotto */
+            margin-bottom: 0.3rem; 
             color: #000000;
             line-height: 1.2;
         }
-        /* Ritorna il font più grande su desktop */
         @media (min-width: 768px) {
             .product-card-name {
                 font-size: 0.875rem; 
                 margin-bottom: 0.5rem;
             }
+        }
+        
+        .preview-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            padding: 6px;
+            color: white;
+            z-index: 10;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            line-height: 1;
+        }
+
+        .preview-icon:hover {
+            background-color: rgba(0, 0, 0, 0.8);
         }
         /* ======================================= */
         /* Stili per l'header centrato */
@@ -138,6 +147,68 @@
         .logo-img {
             height: 70px; 
         }
+
+        /* === NUOVI STILI PER LIGHTBOX === */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+        }
+
+        .lightbox-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lightbox-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* Assicura che l'immagine sia contenuta senza tagli */
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .lightbox-close:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        /* =================================== */
     </style>
 </head>
 <body class="font-sans min-h-screen p-4 md:p-8 flex items-center justify-center">
@@ -290,15 +361,21 @@
         </main>
     </div>
 
+    <div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <img id="lightboxImage" src="" alt="Anteprima prodotto">
+            <button class="lightbox-close" onclick="closeLightbox()">✖</button>
+        </div>
+    </div>
     <script>
         // Array dei prodotti con i prezzi (IVA esclusa)
         const products = [
-            { id: 'barchette', name: 'Barchetta', description: 'Ideale per omaggi gastronomici o piattini d\'antipasto.', image: 'barchetta_pic1.jpg', price: 9.00 }, 
-            { id: 'porta_cellulare', name: 'Porta Telefono', description: 'Supporto da scrivania personalizzabile con il tuo logo.', image: 'portatelefono_pic2.jpg', price: 9.00 }, 
-            { id: 'porta_candela_coperchio', name: 'Porta Candela con Coperchio', description: 'Contenitore elegante per candele o decorazioni.', image: 'candelaconcoperchio_pic.jpg', price: 11.99 },
+            { id: 'barchette', name: 'Barchetta', description: 'Forma elegante e versatile utilizzabile in vari ambienti.', image: 'barchetta_pic1.jpg', price: 9.00 }, 
+            { id: 'porta_cellulare', name: 'Porta Telefono', description: 'Supporto per telefono da scrivania.', image: 'portatelefono_pic2.jpg', price: 9.00 }, 
+            { id: 'porta_candela_coperchio', name: 'Porta Candela con Coperchio', description: 'Contenitore elegante per candele o devorazioni.', image: 'candelaconcoperchio_pic.jpg', price: 11.99 },
             { id: 'porta_candela', name: 'Porta Candela Semplice', description: 'Versione minimalista per tealight o piccole candele.', image: 'candela_pic.jpg', price: 9.99 },
-            { id: 'porta_documenti', name: 'Porta Documenti', description: 'Soluzione verticale per cataloghi o documenti. Utile per il branding aziendale.', image: 'portadocumenti_pic.jpg', price: 9.99 }, 
-            { id: 'porta_penne', name: 'Portapenne', description: 'Design cilindrico per penne e matite, personalizzabile per il brand.', image: 'portapenne_pic.jpg', price: 9.00 }, 
+            { id: 'porta_documenti', name: 'Porta Documenti', description: 'Soluzione verticale per cataloghi o documenti con porta penna.', image: 'portadocumenti_pic.jpg', price: 9.99 }, 
+            { id: 'porta_penne', name: 'Portapenne', description: 'Porta penne e matite pratico con design elegante.', image: 'portapenne_pic.jpg', price: 9.00 }, 
         ];
         
         const MIN_QUANTITY = 30; 
@@ -307,11 +384,30 @@
         let selectedProductsList, noSelectionMessage, totalQuantityError, realtimeSubtotal, grandSubtotalDisplay;
         let vatNumberInput, vatNumberError, phonePrefixSelect, phoneNumberInput, phoneNumberError;
         let sdiCodeInput, billingAddressInput;
+        // Riferimenti ai nuovi elementi del lightbox
+        let lightboxOverlay, lightboxImage;
 
-        // La funzione initAutocomplete è stata rimossa, in quanto non necessaria.
 
         function formatCurrency(amount) {
             return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount);
+        }
+
+        /**
+         * ✅ MODIFICATO: Ora apre l'immagine nel lightbox.
+         */
+        function openImagePreview(event, imagePath) {
+            event.stopPropagation(); // Impedisce che l'evento di click raggiunga la card
+            lightboxImage.src = imagePath;
+            lightboxOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Impedisce lo scroll del body
+        }
+
+        /**
+         * ✅ NUOVA FUNZIONE: Chiude il lightbox.
+         */
+        function closeLightbox() {
+            lightboxOverlay.classList.remove('active');
+            document.body.style.overflow = ''; // Ripristina lo scroll del body
         }
 
         function renderProductGrid() {
@@ -328,6 +424,9 @@
                 card.innerHTML = `
                     <div class="product-card-image-wrapper">
                         <img src="${product.image}" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/300x200/000000/FFFFFF?text=IMMAGINE+NON+TROVATA'" loading="lazy">
+                    </div>
+                    <div class="preview-icon" onclick="openImagePreview(event, '${product.image}')" title="Vedi immagine ingrandita">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
                     </div>
                     <div class="product-card-info">
                         <span class="product-card-name">${product.name}</span>
@@ -447,13 +546,8 @@
             return allValid;
         }
 
-        /**
-         * ✅ MODIFICA: Converte la P.IVA in maiuscolo e poi valida.
-         */
         function validateVatNumber() {
-            // Forza la conversione del valore a maiuscolo direttamente nel campo
             vatNumberInput.value = vatNumberInput.value.toUpperCase();
-            
             const vatValue = vatNumberInput.value.trim();
             
             if (vatValue.length === 0) {
@@ -576,7 +670,6 @@
             outputArea.innerHTML = `<div class="p-4 bg-blue-100 text-blue-800 rounded-lg">Invio in corso... Attendere.</div>`;
 
             try {
-                // ✅ MODIFICA URL: Uso dell'URL relativo per il deploy su Render
                 const response = await fetch('/api/send-quote', { 
                     method: 'POST',
                     body: formData 
@@ -622,6 +715,10 @@
             phoneNumberError = document.getElementById('phoneNumberError');
             sdiCodeInput = document.getElementById('sdiCode');
             billingAddressInput = document.getElementById('billingAddress');
+
+            // Inizializzazione dei nuovi riferimenti al lightbox
+            lightboxOverlay = document.getElementById('lightboxOverlay');
+            lightboxImage = document.getElementById('lightboxImage');
 
             if (logoFileInput) logoFileInput.addEventListener('change', updateLogoFileName);
             if (requestForm) {
