@@ -53,14 +53,14 @@
             border: 2px solid #D1D5DB; /* Bordo leggero di default */
             padding: 0; 
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Importante per il flex-grow/shrink */
             align-items: center;
-            justify-content: flex-start; /* Allineato in alto per evitare spazi vuoti */
+            justify-content: flex-start; 
             background-color: #FFFFFF;
             text-align: center;
             overflow: hidden; 
             border-radius: 0.75rem; 
-            aspect-ratio: 4/5; 
+            /* RIMOSSA la proprietà aspect-ratio: 4/5; per permettere l'espansione verticale */
             position: relative; 
         }
 
@@ -75,11 +75,12 @@
         }
 
         .product-card-image-wrapper {
-            height: 70%; 
+            /* Rimosso: height: 70%; */ 
+            flex-grow: 1; /* Permette all'immagine di prendere lo spazio rimanente */
             width: 100%;
             overflow: hidden;
             border-radius: 0.75rem 0.75rem 0 0; 
-            min-height: 120px; 
+            min-height: 120px; /* Altezza minima per l'immagine */
         }
 
         .product-card-image-wrapper img {
@@ -89,7 +90,8 @@
         }
 
         .product-card-info { 
-            height: 30%; 
+            /* Rimosso: height: 30%; */ 
+            flex-shrink: 0; /* Impedisce al contenitore del testo di rimpicciolirsi, permettendo l'espansione verticale */
             padding: 0.5rem; 
             width: 100%;
             display: flex;
@@ -361,13 +363,15 @@
         </main>
     </div>
 
-    <div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
+    
+<div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
         <div class="lightbox-content" onclick="event.stopPropagation()">
             <img id="lightboxImage" src="" alt="Anteprima prodotto">
             <button class="lightbox-close" onclick="closeLightbox()">✖</button>
         </div>
     </div>
-    <script>
+    
+<script>
         // Array dei prodotti con i prezzi (IVA esclusa)
         const products = [
             { id: 'barchette', name: 'Barchetta', description: 'Forma elegante e versatile utilizzabile in vari ambienti.', image: 'barchetta_pic1.jpg', price: 9.00 }, 
@@ -393,7 +397,7 @@
         }
 
         /**
-         * ✅ MODIFICATO: Ora apre l'immagine nel lightbox.
+         * Apre l'immagine nel lightbox.
          */
         function openImagePreview(event, imagePath) {
             event.stopPropagation(); // Impedisce che l'evento di click raggiunga la card
@@ -403,7 +407,7 @@
         }
 
         /**
-         * ✅ NUOVA FUNZIONE: Chiude il lightbox.
+         * Chiude il lightbox.
          */
         function closeLightbox() {
             lightboxOverlay.classList.remove('active');
