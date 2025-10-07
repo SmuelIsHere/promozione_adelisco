@@ -424,17 +424,16 @@
         }
 
         /**
-         * Renderizza la griglia di selezione dei prodotti.
+         * Crea e aggiunge le card iniziali dei prodotti alla griglia.
          */
-        function renderProductGrid() {
+        function initializeProductGrid() {
             if (!productGrid) return; 
-            productGrid.innerHTML = ''; 
             
             products.forEach(product => {
                 const card = document.createElement('div');
                 card.id = `card-${product.id}`;
-                const isSelected = selectedProductsMap.has(product.id);
-                card.className = `product-card rounded-xl shadow-md ${isSelected ? 'selected' : ''}`;
+                // La classe 'selected' sarà aggiunta in selectProduct
+                card.className = `product-card rounded-xl shadow-md`; 
                 card.setAttribute('data-product-id', product.id);
                 
                 card.innerHTML = `
@@ -453,22 +452,31 @@
                 productGrid.appendChild(card);
             });
         }
-
+        
         /**
          * Seleziona o deseleziona un prodotto.
+         * **MODIFICATA**: Ora gestisce solo l'aggiunta/rimozione della classe 'selected'
+         * e aggiorna la mappa.
          * @param {string} productId - L'ID del prodotto.
          */
         function selectProduct(productId) {
             const product = products.find(p => p.id === productId);
             if (!product) return;
 
+            const card = document.getElementById(`card-${productId}`);
+            if (!card) return;
+
             if (selectedProductsMap.has(productId)) {
+                // Deseleziona
                 selectedProductsMap.delete(productId);
+                card.classList.remove('selected');
             } else {
+                // Seleziona
                 // Aggiunge il prodotto con la quantità minima predefinita
                 selectedProductsMap.set(productId, { ...product, quantity: MIN_QUANTITY, price: product.price }); 
+                card.classList.add('selected');
             }
-            renderProductGrid();
+            // Non chiamiamo più renderProductGrid() qui!
             renderSelectedProducts();
             updateGrandSubtotal(); 
             checkFormValidity();
@@ -755,7 +763,7 @@
                     // Resetta lo stato del form e della selezione prodotti
                     form.reset(); 
                     selectedProductsMap.clear(); 
-                    renderProductGrid();
+                    initializeProductGrid(); // Rigenera le card senza la classe 'selected'
                     renderSelectedProducts();
                     if(logoFileNameDisplay) logoFileNameDisplay.textContent = 'Nessun file selezionato.';
                     checkFormValidity();
@@ -819,7 +827,7 @@
                 }
             }
             // Rendering iniziale e controllo validità
-            renderProductGrid();
+            initializeProductGrid(); // Chiamata iniziale per costruire la griglia
             renderSelectedProducts();
             checkFormValidity(); 
         });
