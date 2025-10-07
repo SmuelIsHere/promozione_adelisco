@@ -5,10 +5,10 @@ const fs = require('fs');
 const path = require('path'); // Importazione del modulo 'path'
 
 const app = express();
-// ✅ 1. CRITICO PER RENDER: Usa la porta impostata dall'ambiente (tipicamente 10000)
+// Configurazione della porta: usa la porta impostata dall'ambiente (es. Render: 10000) o la 3000 come fallback.
 const port = process.env.PORT || 3000; 
 
-// 2. CONFIGURAZIONE STATICA: 
+// Configurazione Statica:
 // Serve tutti i file CSS, JS, immagini, ecc., dalla cartella 'public'.
 app.use(express.static(path.join(__dirname, 'public'))); 
 
@@ -20,17 +20,17 @@ const transporter = nodemailer.createTransport({
     secure: true, 
     auth: {
         user: "adeliscosrls@gmail.com", 
-        pass: "cbymgloitbkltufu" // ⚠️ Password Applicazione
+        pass: "cbymgloitbkltufu" // Password Applicazione (NON una password utente standard)
     }
 });
 
-// Configurazione di Multer
+// Configurazione di Multer per la gestione dell'upload di file
 const upload = multer({ 
-    dest: 'uploads/',
-    limits: { fileSize: 10 * 1024 * 1024 } 
+    dest: 'uploads/', // Cartella temporanea per i file caricati
+    limits: { fileSize: 10 * 1024 * 1024 } // Limite a 10MB
  });
 
-// Permette le chiamate cross-origin (CORS) 
+// Middleware per abilitare le chiamate cross-origin (CORS) 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET,POST');
@@ -38,21 +38,22 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ 3. FIX CRUCIALE PER LA HOMEPAGE: Rotta esplicita per la radice del sito.
-// Questo previene l'errore 'cannot GET /' e soddisfa l'health check di Render.
+// Rotta principale per servire la homepage
+// Necessaria per prevenire l'errore 'cannot GET /' e per l'health check di servizi come Render.
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 
 // ROTTA API per la richiesta di preventivo
+// Utilizza upload.single('logoFile') per processare il file allegato.
 app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
     
-    // PASSO DI DEBUG: Controlla i dati ricevuti nel terminale
+    // Debug: Controlla i dati ricevuti nel terminale
     console.log('Dati di form ricevuti (req.body):', req.body); 
     console.log('File ricevuto (req.file):', req.file);
 
-    // 1. Estrazione dei dati e applicazione del fallback robusto per i campi vuoti
+    // 1. Estrazione dei dati e fallback per i campi non obbligatori
     const uploadedFile = req.file;
     const companyName = req.body.companyName || 'Non fornito';
     const vatNumber = req.body.vatNumber || 'Non fornito';
@@ -62,7 +63,7 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
     const billingAddress = req.body.billingAddress || 'Non fornito';
     const notes = req.body.notes || 'Nessuna nota aggiuntiva.';
     
-    // I dati dei prodotti sono ora una stringa JSON
+    // Parsing dei dati dei prodotti (inviati come stringa JSON)
     const productsJson = req.body.products;
     let selectedProducts = [];
     try {
@@ -74,15 +75,16 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
     const subtotal = req.body.subtotal || '0,00 €';
     const logoFileName = uploadedFile ? uploadedFile.originalname : 'Nessun file allegato';
 
-    // 2. Validazione di base dei campi obbligatori
+    // 2. Validazione dei campi obbligatori
     if (!req.body.companyName || !req.body.vatNumber || !req.body.email || !req.body.sdiCode || !req.body.billingAddress || selectedProducts.length === 0) {
+        // Se la validazione fallisce, cancella il file temporaneo se presente
         if (uploadedFile) {
-             fs.unlink(uploadedFile.path, err => { /* ignora l'errore di cancellazione */ });
+             fs.unlink(uploadedFile.path, err => { /* Ignora l'errore di cancellazione */ });
         }
         return res.status(400).json({ success: false, message: 'Richiesta incompleta. Compila tutti i campi obbligatori e seleziona almeno un prodotto.' });
     }
 
-    // ✅ MODIFICA: Generazione della tabella HTML per i prodotti con stili in linea più semplici e robusti (compatibilità email)
+    // 3. Generazione della tabella HTML per i prodotti (con stili in linea per la compatibilità email)
     const productsHtml = selectedProducts.length > 0
         ? `
         <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 15px; font-size: 14px;">
@@ -108,7 +110,7 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
         `
         : '<p style="margin: 0; color: #EF4444; font-weight: bold;">Nessun prodotto selezionato.</p>';
 
-    // 3. Generazione del corpo dell'email (HTML)
+    // 4. Generazione del corpo dell'email (HTML)
     const emailBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #D1D5DB; border-radius: 8px; background-color: #FFFFFF; color: #374151;">
             
@@ -145,7 +147,7 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
         </div>
     `;
 
-    // 4. Creazione delle opzioni per l'invio
+    // 5. Creazione delle opzioni per l'invio
     const mailOptions = {
         from: '"Ordine Promozionale Ceramiche" <adeliscosrls@gmail.com>',
         to: 'adeliscosrls@gmail.com', 
@@ -154,6 +156,7 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
         attachments: []
     };
     
+    // Aggiunta del file caricato come allegato
     if (uploadedFile) {
         mailOptions.attachments.push({
             filename: uploadedFile.originalname,
@@ -162,7 +165,7 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
         });
     }
 
-    // 5. Invio dell'email
+    // 6. Invio dell'email e gestione della risposta
     try {
         await transporter.sendMail(mailOptions);
         res.json({ success: true, message: 'Richiesta inviata correttamente.' });
@@ -171,7 +174,7 @@ app.post('/api/send-quote', upload.single('logoFile'), async (req, res) => {
         console.error('Errore durante l\'invio dell\'email:', error);
         res.status(500).json({ success: false, message: 'Errore durante l\'invio dell\'ordine promozionale.', details: error.message });
     } finally {
-        // 6. CRUCIALE: Cancella il file temporaneo dopo l'invio
+        // 7. Pulizia: Cancella il file temporaneo dopo l'invio (indipendentemente dal successo)
         if (uploadedFile) {
             fs.unlink(uploadedFile.path, err => {
                 if (err) console.error('Errore nella cancellazione del file temporaneo:', err);

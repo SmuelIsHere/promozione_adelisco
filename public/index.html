@@ -29,10 +29,11 @@
         /* Importazione del font Inter */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         
-        /* Stili aggiuntivi per un aspetto pulito e moderno */
+        /* Stili di base per il corpo */
         body {
             background-color: #F3F4F6; /* Sfondo Grigio Chiaro */
         }
+        /* Stili per i campi di input */
         .form-input {
             transition: all 0.2s;
             border-color: #D1D5DB; /* Grigio chiaro per i bordi */
@@ -47,21 +48,20 @@
             border-color: #EF4444 !important; /* Rosso per errore */
         }
         
-        /* === MODIFICHE CHIAVE PER LA GRIGLIA DI SELEZIONE === */
+        /* Stili per le card di selezione prodotto */
         .product-card {
             cursor: pointer;
             transition: transform 0.2s ease-out, box-shadow 0.2s, border-color 0.2s;
             border: 2px solid #D1D5DB; /* Bordo leggero di default */
             padding: 0; 
             display: flex;
-            flex-direction: column; /* Importante per il flex-grow/shrink */
+            flex-direction: column; 
             align-items: center;
             justify-content: flex-start; 
             background-color: #FFFFFF;
             text-align: center;
             overflow: hidden; 
             border-radius: 0.75rem; 
-            /* RIMOSSA la proprietà aspect-ratio: 4/5; per permettere l'espansione verticale */
             position: relative; 
         }
 
@@ -76,8 +76,7 @@
         }
 
         .product-card-image-wrapper {
-            /* Rimosso: height: 70%; */ 
-            flex-grow: 1; /* Permette all'immagine di prendere lo spazio rimanente */
+            flex-grow: 1; 
             width: 100%;
             overflow: hidden;
             border-radius: 0.75rem 0.75rem 0 0; 
@@ -91,8 +90,7 @@
         }
 
         .product-card-info { 
-            /* Rimosso: height: 30%; */ 
-            flex-shrink: 0; /* Impedisce al contenitore del testo di rimpicciolirsi, permettendo l'espansione verticale */
+            flex-shrink: 0; 
             padding: 0.5rem; 
             width: 100%;
             display: flex;
@@ -135,7 +133,7 @@
         .preview-icon:hover {
             background-color: rgba(0, 0, 0, 0.8);
         }
-        /* ======================================= */
+        
         /* Stili per l'header centrato */
         .header-content {
             display: flex;
@@ -151,7 +149,7 @@
             height: 70px; 
         }
 
-        /* === NUOVI STILI PER LIGHTBOX === */
+        /* Stili per il Lightbox (Anteprima Immagine) */
         .lightbox-overlay {
             position: fixed;
             top: 0;
@@ -185,7 +183,7 @@
         .lightbox-content img {
             max-width: 100%;
             max-height: 100%;
-            object-fit: contain; /* Assicura che l'immagine sia contenuta senza tagli */
+            object-fit: contain; 
             border-radius: 8px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
@@ -211,7 +209,6 @@
         .lightbox-close:hover {
             background-color: rgba(255, 255, 255, 0.4);
         }
-        /* =================================== */
     </style>
 </head>
 <body class="font-sans min-h-screen p-4 md:p-8 flex items-center justify-center">
@@ -364,8 +361,7 @@
         </main>
     </div>
 
-    
-<div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
+    <div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()">
         <div class="lightbox-content" onclick="event.stopPropagation()">
             <img id="lightboxImage" src="" alt="Anteprima prodotto">
             <button class="lightbox-close" onclick="closeLightbox()">✖</button>
@@ -385,36 +381,51 @@
         
         const MIN_QUANTITY = 30; 
         let selectedProductsMap = new Map();
+        // Riferimenti agli elementi DOM principali
         let requestForm, productGrid, submitBtn, outputArea, logoFileInput, logoFileNameDisplay;
         let selectedProductsList, noSelectionMessage, totalQuantityError, realtimeSubtotal, grandSubtotalDisplay;
         let vatNumberInput, vatNumberError, phonePrefixSelect, phoneNumberInput, phoneNumberError;
         let sdiCodeInput, billingAddressInput;
-        // Riferimenti ai nuovi elementi del lightbox
+        // Riferimenti agli elementi del lightbox
         let lightboxOverlay, lightboxImage;
 
 
+        /**
+         * Formatta un importo numerico in valuta italiana (EUR).
+         * @param {number} amount - L'importo da formattare.
+         * @returns {string} L'importo formattato.
+         */
         function formatCurrency(amount) {
             return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount);
         }
 
         /**
          * Apre l'immagine nel lightbox.
+         * @param {Event} event - L'evento di click.
+         * @param {string} imagePath - Il percorso dell'immagine.
          */
         function openImagePreview(event, imagePath) {
             event.stopPropagation(); // Impedisce che l'evento di click raggiunga la card
-            lightboxImage.src = imagePath;
-            lightboxOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Impedisce lo scroll del body
+            if (lightboxImage && lightboxOverlay) {
+                lightboxImage.src = imagePath;
+                lightboxOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Impedisce lo scroll del body
+            }
         }
 
         /**
          * Chiude il lightbox.
          */
         function closeLightbox() {
-            lightboxOverlay.classList.remove('active');
-            document.body.style.overflow = ''; // Ripristina lo scroll del body
+            if (lightboxOverlay) {
+                lightboxOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // Ripristina lo scroll del body
+            }
         }
 
+        /**
+         * Renderizza la griglia di selezione dei prodotti.
+         */
         function renderProductGrid() {
             if (!productGrid) return; 
             productGrid.innerHTML = ''; 
@@ -443,6 +454,10 @@
             });
         }
 
+        /**
+         * Seleziona o deseleziona un prodotto.
+         * @param {string} productId - L'ID del prodotto.
+         */
         function selectProduct(productId) {
             const product = products.find(p => p.id === productId);
             if (!product) return;
@@ -450,6 +465,7 @@
             if (selectedProductsMap.has(productId)) {
                 selectedProductsMap.delete(productId);
             } else {
+                // Aggiunge il prodotto con la quantità minima predefinita
                 selectedProductsMap.set(productId, { ...product, quantity: MIN_QUANTITY, price: product.price }); 
             }
             renderProductGrid();
@@ -458,6 +474,9 @@
             checkFormValidity();
         }
 
+        /**
+         * Calcola e aggiorna il subtotale complessivo in tempo reale.
+         */
         function updateGrandSubtotal() {
             let currentGrandTotalExclIVA = 0;
             selectedProductsMap.forEach(product => {
@@ -473,6 +492,9 @@
             }
         }
 
+        /**
+         * Renderizza la lista dei prodotti selezionati con i campi quantità.
+         */
         function renderSelectedProducts() {
             if (!selectedProductsList) return;
             selectedProductsList.innerHTML = ''; 
@@ -487,7 +509,8 @@
             noSelectionMessage.classList.add('hidden');
 
             selectedProductsMap.forEach(product => {
-                const subtotal = (product.quantity && !isNaN(product.quantity) ? product.quantity : 0) * product.price;
+                const quantity = product.quantity && !isNaN(product.quantity) ? product.quantity : 0;
+                const subtotal = quantity * product.price;
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-border-light';
                 itemDiv.id = `selected-item-${product.id}`;
@@ -501,7 +524,7 @@
                     <div class="flex items-center space-x-4">
                         <div class="w-24">
                             <label for="qty-${product.id}" class="block text-xs font-medium text-accent">Pezzi (Min. ${MIN_QUANTITY})</label>
-                            <input type="number" id="qty-${product.id}" name="qty-${product.id}" min="${MIN_QUANTITY}" value="${product.quantity}" class="form-input w-full p-2 border rounded-lg text-sm text-center" oninput="updateQuantity('${product.id}', this.value)">
+                            <input type="number" id="qty-${product.id}" name="qty-${product.id}" min="${MIN_QUANTITY}" value="${quantity}" class="form-input w-full p-2 border rounded-lg text-sm text-center" oninput="updateQuantity('${product.id}', this.value)">
                         </div>
                         <div class="w-28 text-right hidden sm:block">
                             <span class="block text-xs font-medium text-accent">Subtotale (IVA Escl.)</span>
@@ -516,6 +539,11 @@
             });
         }
 
+        /**
+         * Aggiorna la quantità di un prodotto selezionato e ricalcola i subtotali.
+         * @param {string} productId - L'ID del prodotto.
+         * @param {string} newQuantity - La nuova quantità (stringa).
+         */
         function updateQuantity(productId, newQuantity) {
             const quantity = parseInt(newQuantity);
             if (selectedProductsMap.has(productId)) {
@@ -532,6 +560,10 @@
             checkFormValidity();
         }
 
+        /**
+         * Controlla che tutti i prodotti selezionati abbiano una quantità valida.
+         * @returns {boolean} True se tutte le quantità sono valide.
+         */
         function validateAllQuantities() {
             let allValid = true;
             if (selectedProductsMap.size === 0) {
@@ -547,18 +579,24 @@
                     }
                 });
             }
-            totalQuantityError.classList.toggle('hidden', allValid);
+            if(totalQuantityError) totalQuantityError.classList.toggle('hidden', allValid);
             return allValid;
         }
 
+        /**
+         * Valida il campo Partita IVA.
+         * @returns {boolean} True se il campo è valido.
+         */
         function validateVatNumber() {
+            if(!vatNumberInput || !vatNumberError) return true;
+
             vatNumberInput.value = vatNumberInput.value.toUpperCase();
             const vatValue = vatNumberInput.value.trim();
             
             if (vatValue.length === 0) {
                 vatNumberInput.classList.remove('input-error');
                 vatNumberError.classList.add('hidden');
-                return false; 
+                return !vatNumberInput.required; // Se non è richiesto, un campo vuoto è ok.
             }
             
             const isValid = vatNumberInput.checkValidity() && vatValue.length <= 16;
@@ -578,7 +616,13 @@
             return isValid;
         }
 
+        /**
+         * Valida il campo Numero di Telefono in base al prefisso selezionato.
+         * @returns {boolean} True se il campo è valido o vuoto.
+         */
         function validatePhoneNumber() {
+            if(!phoneNumberInput || !phonePrefixSelect || !phoneNumberError) return true;
+
             const numberValue = phoneNumberInput.value.replace(/\s+/g, '');
             if (numberValue.length === 0) {
                 phoneNumberInput.classList.remove('input-error');
@@ -599,34 +643,55 @@
                 phoneNumberInput.classList.remove('input-error');
                 phoneNumberError.classList.add('hidden');
             }
+            // Aggiorna la lunghezza massima consentita
             phoneNumberInput.maxLength = maxLength + 2; 
             return isLengthValid;
         }
 
+        /**
+         * Controlla la validità generale del form e abilita/disabilita il pulsante di invio.
+         * @returns {boolean} True se il form è pronto per l'invio.
+         */
         function checkFormValidity() {
+            if (!requestForm || !submitBtn) return false;
+
+            // La funzione checkValidity() verifica i campi 'required' e 'pattern'
             const isFormFieldsValid = requestForm.checkValidity();
             const isProductSelectionValid = validateAllQuantities();
             const isVatValid = validateVatNumber();
             const isPhoneValid = validatePhoneNumber(); 
+            // Aggiungi qui altre validazioni custom se necessario
+
             const isOverallValid = isFormFieldsValid && isProductSelectionValid && isVatValid && isPhoneValid;
-            if (submitBtn) {
-                submitBtn.disabled = !isOverallValid;
-            }
+            
+            submitBtn.disabled = !isOverallValid;
             return isOverallValid; 
         }
 
+        /**
+         * Aggiorna il nome del file logo selezionato nel display.
+         */
         function updateLogoFileName() {
+            if (!logoFileInput || !logoFileNameDisplay) return;
+
             const file = logoFileInput.files[0];
             logoFileNameDisplay.textContent = file ? file.name : 'Nessun file selezionato.';
             checkFormValidity();
         }
 
+        /**
+         * Gestisce l'invio asincrono dei dati del preventivo al server.
+         * @param {Event} event - L'evento di submit del form.
+         */
         async function sendQuoteRequest(event) {
             event.preventDefault();
+            
             const isOverallValid = checkFormValidity();
             if (!isOverallValid) {
-                outputArea.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-800 rounded-lg">Compila correttamente tutti i campi obbligatori e correggi gli errori di validazione.</div>`;
-                outputArea.classList.remove('hidden');
+                if(outputArea) {
+                    outputArea.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-800 rounded-lg">Compila correttamente tutti i campi obbligatori e correggi gli errori di validazione.</div>`;
+                    outputArea.classList.remove('hidden');
+                }
                 const firstInvalidField = requestForm.querySelector(':invalid');
                 if (firstInvalidField) {
                     firstInvalidField.focus();
@@ -634,18 +699,22 @@
                 return;
             }
 
-            outputArea.innerHTML = '';
-            outputArea.classList.remove('hidden');
+            if(outputArea) {
+                outputArea.innerHTML = '';
+                outputArea.classList.remove('hidden');
+            }
             
             const form = event.target;
             const formData = new FormData(form);
 
+            // Rimuove i campi quantità dal FormData per inviarli in un array JSON
             for(let key of formData.keys()) {
                 if(key.startsWith('qty-')) {
                     formData.delete(key);
                 }
             }
             
+            // Crea l'array JSON dei prodotti selezionati con quantità e subtotali
             const productsArray = [];
             selectedProductsMap.forEach(product => {
                 const quantityInput = document.getElementById(`qty-${product.id}`);
@@ -661,6 +730,7 @@
             });
             formData.append('products', JSON.stringify(productsArray));
             
+            // Aggiunge il subtotale complessivo e il numero di telefono completo
             const grandSubtotal = document.getElementById('grandSubtotalDisplay').textContent;
             formData.append('subtotal', grandSubtotal);
 
@@ -671,8 +741,8 @@
                  formData.delete('phone');
             }
             
-            submitBtn.disabled = true;
-            outputArea.innerHTML = `<div class="p-4 bg-blue-100 text-blue-800 rounded-lg">Invio in corso... Attendere.</div>`;
+            if(submitBtn) submitBtn.disabled = true;
+            if(outputArea) outputArea.innerHTML = `<div class="p-4 bg-blue-100 text-blue-800 rounded-lg">Invio in corso... Attendere.</div>`;
 
             try {
                 const response = await fetch('/api/send-quote', { 
@@ -681,27 +751,33 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    outputArea.innerHTML = `<div class="p-4 bg-green-100 text-green-800 rounded-lg">✅ Ordine inviato con successo! Verrai ricontattato al più presto.</div>`;
+                    if(outputArea) outputArea.innerHTML = `<div class="p-4 bg-green-100 text-green-800 rounded-lg">✅ Ordine inviato con successo! Verrai ricontattato al più presto.</div>`;
+                    // Resetta lo stato del form e della selezione prodotti
                     form.reset(); 
                     selectedProductsMap.clear(); 
                     renderProductGrid();
                     renderSelectedProducts();
-                    logoFileNameDisplay.textContent = 'Nessun file selezionato.';
+                    if(logoFileNameDisplay) logoFileNameDisplay.textContent = 'Nessun file selezionato.';
                     checkFormValidity();
                 } else {
-                    outputArea.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded-lg">❌ Errore nell'invio della richiesta: ${result.message || 'Errore sconosciuto.'}</div>`;
+                    if(outputArea) outputArea.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded-lg">❌ Errore nell'invio della richiesta: ${result.message || 'Errore sconosciuto.'}</div>`;
                 }
             } catch (error) {
                 console.error('Errore durante il fetch:', error);
-                outputArea.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded-lg">❌ Errore di comunicazione con il server. Riprova più tardi.</div>`;
+                if(outputArea) outputArea.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded-lg">❌ Errore di comunicazione con il server. Riprova più tardi.</div>`;
             } finally {
-                 if (!submitBtn.disabled || outputArea.innerHTML.includes('Errore')) {
+                 // Riabilita il pulsante solo in caso di successo o se c'è stato un errore da correggere
+                 if (submitBtn && (!submitBtn.disabled || (outputArea && outputArea.innerHTML.includes('Errore')))) {
                     submitBtn.disabled = false;
                  }
             }
         }
 
+        /**
+         * Funzione di inizializzazione eseguita al caricamento del DOM.
+         */
         document.addEventListener('DOMContentLoaded', () => {
+            // Assegnazione dei riferimenti DOM
             productGrid = document.getElementById('productGrid');
             selectedProductsList = document.getElementById('selectedProductsList');
             noSelectionMessage = document.getElementById('noSelectionMessage');
@@ -721,10 +797,11 @@
             sdiCodeInput = document.getElementById('sdiCode');
             billingAddressInput = document.getElementById('billingAddress');
 
-            // Inizializzazione dei nuovi riferimenti al lightbox
+            // Riferimenti al lightbox
             lightboxOverlay = document.getElementById('lightboxOverlay');
             lightboxImage = document.getElementById('lightboxImage');
 
+            // Setup degli event listener
             if (logoFileInput) logoFileInput.addEventListener('change', updateLogoFileName);
             if (requestForm) {
                 requestForm.addEventListener('input', checkFormValidity);
@@ -732,6 +809,7 @@
                 if(vatNumberInput) {
                     vatNumberInput.addEventListener('input', validateVatNumber);
                     vatNumberInput.addEventListener('blur', () => {
+                        // Forzatura della validazione al blur per i campi required lasciati vuoti
                         if (vatNumberInput.value.trim() === '' && vatNumberInput.required) {
                             vatNumberInput.classList.add('input-error');
                             vatNumberError.textContent = "Campo obbligatorio.";
@@ -740,6 +818,7 @@
                     });
                 }
             }
+            // Rendering iniziale e controllo validità
             renderProductGrid();
             renderSelectedProducts();
             checkFormValidity(); 
